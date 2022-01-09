@@ -1,0 +1,227 @@
+esphome:
+  name: world-clock
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # ap:
+  #   ssid: "World-Clock Fallback Hotspot"
+  #   password: !secret hotspot_password
+
+# captive_portal:
+
+globals:
+  - id: display_status
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+    
+switch:
+  - platform: template
+    name: "World Clock Time"
+    lambda: |-
+      if (id(display_status) == true) {
+        return true;
+      } else {
+        return false;
+      }
+    turn_on_action:
+      - globals.set:
+          id: display_status
+          value: 'true'
+    turn_off_action:
+      - globals.set:
+          id: display_status
+          value: 'false'  
+          
+number:
+  - platform: template
+    id: display_intensity 
+    name: "World Clock Intensity (0-7)"
+    icon: mdi:brightness-5
+    optimistic: true
+    initial_value: 0
+    min_value: 0
+    max_value: 7
+    step: 1
+    update_interval: 4000ms
+    restore_value: true
+    on_value:
+      then:
+        - component.update: tm1637_display1
+        - component.update: tm1637_display2
+        - component.update: tm1637_display3
+        - component.update: tm1637_display4
+        - component.update: tm1637_display5
+        - component.update: tm1637_display6
+
+time:
+- platform: sntp
+  id: ha_time
+
+light:
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812
+    pin: D4
+    num_leds: 6
+    name: "World Clock RGB Light"
+
+#Timezone: 'CET-1CEST,M3.5.0,M10.5.0/3' - Europe/Belgrade
+display:
+- platform: tm1637
+  id: tm1637_display1
+  clk_pin: D6
+  dio_pin: D5
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
+
+#Timezone: 'PST8PDT,M3.2.0,M11.1.0' America/Los_Angeles
+- platform: tm1637
+  id: tm1637_display2
+  clk_pin: D6
+  dio_pin: D0
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "PST8PDT,M3.2.0,M11.1.0", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
+
+#Timezone: 'EST5EDT,M3.2.0,M11.1.0' America/New_York
+- platform: tm1637
+  id: tm1637_display3
+  clk_pin: D6
+  dio_pin: D7
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "EST5EDT,M3.2.0,M11.1.0", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
+        
+# Timezone: 'GMT0BST,M3.5.0/1,M10.5.0'     Europe/London
+- platform: tm1637
+  id: tm1637_display4
+  clk_pin: D6
+  dio_pin: D1
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "GMT0BST,M3.5.0/1,M10.5.0", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
+
+# Timezone: 'JST-9'   Japan/Tokyo
+- platform: tm1637
+  id: tm1637_display5
+  clk_pin: D6
+  dio_pin: D2
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "JST-9", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
+        
+# Timezone: 'AEST-10AEDT,M10.1.0,M4.1.0/3'  Australia/Sydney   
+- platform: tm1637
+  id: tm1637_display6
+  clk_pin: D6
+  dio_pin: D3
+  update_interval: 500ms
+  lambda: |-
+      if (id(display_status) == false) {
+        it.printf("    ");
+      }
+      else {
+        it.set_intensity(id(display_intensity).state);
+        setenv("TZ", "AEST-10AEDT,M10.1.0,M4.1.0/3", 1);
+        tzset();
+        static int i = 0;
+        if (i == 0){
+          i=1;
+          it.strftime("%H.%M", id(ha_time).now());
+        }else{
+          i=0;
+          it.strftime("%H%M", id(ha_time).now());
+        }
+      }
